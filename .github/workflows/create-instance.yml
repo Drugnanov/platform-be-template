@@ -1,0 +1,44 @@
+name: Create Azure Resources
+
+on:
+  push:
+
+env:
+  LOCATION: "West Europe"
+  RG_NAME: "pltf-${{ github.ref_name }}"
+
+jobs:
+  create-azure-resources:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Login to Azure
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Create Azure Resource Group
+        uses: azure/CLI@v1
+        with:
+          azcliversion: 2.30.0
+          inlineScript: |
+            az group create --name "${{ env.RG_NAME }}" --location "${{ env.LOCATION }}"
+
+      - name: Create Azure Container Instance
+        uses: azure/CLI@v1
+        with:
+          azcliversion: 2.30.0
+          inlineScript: |
+            az appservice plan create \
+              --name "${{ env.RG_NAME }}-app1" \
+              --resource-group "${{ env.RG_NAME }}" \
+              --sku B1 \
+              --is-linux
+            az webapp create \
+              --resource-group "${{ env.RG_NAME }}" \
+              --plan "${{ env.RG_NAME }}-app1" \
+              --name filuta-demo-deploy \
+              --multicontainer-config-type compose \
+              --multicontainer-config-file ./app/docker-compose.yaml
