@@ -2,12 +2,22 @@ name: Create Azure Resources
 
 on:
   workflow_dispatch:
+    inputs:
+      id:
+        description: 'run identifier'
+        required: false
 
 env:
   LOCATION: "West Europe"
   RG_NAME: "pltf-${{ github.ref_name }}"
 
 jobs:
+  id:
+    name: Workflow ID Provider
+    runs-on: ubuntu-latest
+    steps:
+      - name: ${{github.event.inputs.id}}
+        run: echo run identifier ${{ inputs.id }}
   create-azure-resources:
     runs-on: ubuntu-latest
     steps:
